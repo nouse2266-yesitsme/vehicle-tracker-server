@@ -1,10 +1,16 @@
 const express = require('express');
+<<<<<<< HEAD
 const admin = require('firebase-admin');
 const bodyParser = require('body-parser');
+=======
+const bodyParser = require('body-parser');
+const axios = require('axios');   // <- added this
+>>>>>>> 71610cb (Initial commit: added server.js and project files)
 
 const app = express();
 const port = process.env.PORT || 3000;
 
+<<<<<<< HEAD
 // Parse URL-encoded data (for GET query parameters)
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -24,10 +30,17 @@ admin.initializeApp({
 const db = admin.firestore();
 
 // Webhook endpoint to receive SIM800L data via HTTP
+=======
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
+// Webhook endpoint
+>>>>>>> 71610cb (Initial commit: added server.js and project files)
 app.get('/simwebhook', async (req, res) => {
   try {
     const { id, lat, lng, speed, battery, timestamp, behavior } = req.query;
 
+<<<<<<< HEAD
     // Validate required parameters
     if (!id || !lat || !lng || !speed || !battery || !timestamp) {
       console.warn('Missing parameters:', req.query);
@@ -65,3 +78,25 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
   console.log(`Webhook server running at http://localhost:${port}`);
 });
+=======
+    if (!id || !lat || !lng || !speed || !battery || !timestamp) {
+      return res.status(400).send('Missing parameters');
+    }
+
+    // Forward to Render HTTPS server
+    const renderUrl = `https://vehicle-tracker-server-sfqi.onrender.com/data?id=${id}&lat=${lat}&lng=${lng}&speed=${speed}&battery=${battery}&timestamp=${timestamp}${behavior ? `&behavior=${behavior}` : ''}`;
+
+    await axios.get(renderUrl);
+
+    console.log('Forwarded data to Render:', req.query);
+    res.send('OK');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error forwarding data');
+  }
+});
+
+app.listen(port, () => {
+  console.log(`Webhook forwarder running at http://localhost:${port}`);
+});
+>>>>>>> 71610cb (Initial commit: added server.js and project files)
