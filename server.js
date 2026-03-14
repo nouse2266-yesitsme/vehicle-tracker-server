@@ -10,6 +10,11 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 // Initialize Firebase Admin SDK using service account JSON from environment variable
+if (!process.env.FIREBASE_KEY_JSON) {
+  console.error('FIREBASE_KEY_JSON not found in environment variables!');
+  process.exit(1);
+}
+
 const serviceAccount = JSON.parse(process.env.FIREBASE_KEY_JSON);
 
 admin.initializeApp({
@@ -18,12 +23,14 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
-// Webhook endpoint to receive data
-app.get('/webhook', async (req, res) => {
+// Webhook endpoint to receive SIM800L data via HTTP
+app.get('/simwebhook', async (req, res) => {
   try {
     const { id, lat, lng, speed, battery, timestamp, behavior } = req.query;
 
+    // Validate required parameters
     if (!id || !lat || !lng || !speed || !battery || !timestamp) {
+      console.warn('Missing parameters:', req.query);
       return res.status(400).send('Missing parameters');
     }
 
@@ -44,9 +51,14 @@ app.get('/webhook', async (req, res) => {
     console.log(`Data stored for ${id}:`, req.query);
     res.send('OK');
   } catch (err) {
-    console.error(err);
+    console.error('Error storing data:', err);
     res.status(500).send('Error storing data');
   }
+});
+
+// Optional: health check endpoint
+app.get('/', (req, res) => {
+  res.send('Webhook server is running!');
 });
 
 // Start the server
